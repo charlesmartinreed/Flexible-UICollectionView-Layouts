@@ -8,8 +8,6 @@
 
 import UIKit
 
-
-
 final class PhotosViewController: UICollectionViewController {
     
     //MARK:- Properties
@@ -19,6 +17,28 @@ final class PhotosViewController: UICollectionViewController {
     private var searches = [FlickrSearchResults]() //tracks all searches made in app
     private var flickr = Flickr() //obj that performs the searches
     private let itemsPerRow: CGFloat = 3
+    
+    var largePhotoIndexPath: IndexPath? { //optionally holds the currently selected photo
+        didSet {
+            var indexPaths = [IndexPath]()
+            if let largePhotoIndexPath = largePhotoIndexPath {
+                indexPaths.append(largePhotoIndexPath)
+            }
+            
+            if let oldValue = oldValue {
+                indexPaths.append(oldValue)
+                collectionView.scrollToItem(at: oldValue, at: .centeredVertically, animated: true)
+            }
+            
+            collectionView.performBatchUpdates({ //if this prop changes, update the colletionView
+                self.collectionView.reloadItems(at: indexPaths)
+            }) { (_) in
+                if let largePhotoIndexPath = self.largePhotoIndexPath {
+                    self.collectionView.scrollToItem(at: largePhotoIndexPath, at: .centeredVertically, animated: true)
+                }
+            }
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,6 +82,19 @@ extension PhotosViewController : UITextFieldDelegate {
     }
 }
 
+//MARK:- UICollectionViewDelegate
+extension PhotosViewController {
+    //tells the collection view whether or not it should select a specific cell
+    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        if largePhotoIndexPath == indexPath {
+            largePhotoIndexPath = nil
+        } else {
+            largePhotoIndexPath = indexPath //fires the didSet in largePhotoIndexPath
+        }
+        return false
+    }
+}
+
 //MARK:- UICollectionViewDataSource extension
 extension PhotosViewController {
     override func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -102,6 +135,14 @@ extension PhotosViewController {
 //MARK:- UICollectionViewFlowLayout delegate extension
 extension PhotosViewController : UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        
+        if indexPath == largePhotoIndexPath {
+            let flickrPhoto = photo(for: indexPath)
+            var size = collectionView.bounds.size
+            size.height -= (sectionInsets.top + sectionInsets.bottom)
+            size.width -= (sectionInsets.left + sectionInsets.right)
+            return flickrPhoto.sizeToFillWidth(of: size)
+        }
         
         let paddingSpace = sectionInsets.left * (itemsPerRow + 1)
         let availableWidth = view.frame.width - paddingSpace
