@@ -74,6 +74,9 @@ final class PhotosViewController: UICollectionViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        collectionView.dragInteractionEnabled = true
+        collectionView.dragDelegate = self
     }
     
     //MARK:- IBActions
@@ -294,4 +297,22 @@ extension PhotosViewController : UICollectionViewDelegateFlowLayout {
         return sectionInsets.left
     }
 }
+
+//MARK:- UICollectionViewDragDelegate
+extension PhotosViewController : UICollectionViewDragDelegate {
+    func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        
+        let flickrPhoto = photo(for: indexPath)
+        guard let thumbnail = flickrPhoto.thumbnail else {
+            return []
+        }
+        
+        let item = NSItemProvider(object: thumbnail) //encapsulate the object for sharing between processes
+        let dragItem = UIDragItem(itemProvider: item)
+        return [dragItem] //even if we're just dragging one photo, this requires returning an array
+    }
+}
+
+
+//MARK:- UICollectionViewDropDelegate
 
