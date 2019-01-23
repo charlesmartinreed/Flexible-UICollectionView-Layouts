@@ -77,6 +77,7 @@ final class PhotosViewController: UICollectionViewController {
         
         collectionView.dragInteractionEnabled = true
         collectionView.dragDelegate = self
+        collectionView.dropDelegate = self
     }
     
     //MARK:- IBActions
@@ -151,6 +152,14 @@ private extension PhotosViewController {
         UIView.animate(withDuration: 0.3) {
             self.shareLabel.sizeToFit()
         }
+    }
+    
+    func removePhoto(at indexPath: IndexPath) {
+        searches[indexPath.section].searchResults.remove(at: indexPath.row)
+    }
+    
+    func insertPhoto(_ flickrPhoto: FlickrPhoto, at indexPath: IndexPath) {
+        searches[indexPath.section].searchResults.insert(flickrPhoto, at: indexPath.row)
     }
 }
 
@@ -315,4 +324,38 @@ extension PhotosViewController : UICollectionViewDragDelegate {
 
 
 //MARK:- UICollectionViewDropDelegate
-
+extension PhotosViewController : UICollectionViewDropDelegate {
+    func collectionView(_ collectionView: UICollectionView, performDropWith coordinator: UICollectionViewDropCoordinator) {
+        
+        //get drop destination from coordinator
+        guard let destinationIndexPath = coordinator.destinationIndexPath else { return }
+        coordinator.items.forEach { dropItem in
+            //if each item passed to the coordinator has a source index path...
+            guard let sourceIndexPath = dropItem.sourceIndexPath else { return }
+            
+            collectionView.performBatchUpdates({
+                //remove the item in collection at the source path, then insert them at the proposed destination
+                let image = photo(for: sourceIndexPath)
+                removePhoto(at: sourceIndexPath)
+                insertPhoto(image, at: destinationIndexPath)
+                collectionView.deleteItems(at: [sourceIndexPath])
+                collectionView.insertItems(at: [destinationIndexPath])
+            }, completion: { (_) in
+                //when the collectionView has been successfully updated, drop the items in their new locations
+                coordinator.drop(dropItem.dragItem, toItemAt: destinationIndexPath)
+            })
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, canHandle session: UIDropSession) -> Bool {
+        //this would normally be used to determine whether or not the drag item(s) should be allowed to drop, but we're only dealing with a single type within our own app here so it's OK to simply return true without additional checks
+        return true
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
+        return UICollectionViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
+    }
+    
+    
+    
+}
