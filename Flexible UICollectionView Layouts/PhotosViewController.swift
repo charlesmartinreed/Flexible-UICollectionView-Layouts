@@ -73,9 +73,13 @@ extension PhotosViewController {
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifer, for: indexPath)
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifer, for: indexPath) as? PhotoCell else { fatalError("Could not create cell") }
         
-        cell.backgroundColor = .black
+        //user our convenience method to find a photo, given an indexPath
+        let flickrPhoto = photo(for: indexPath)
+        cell.backgroundColor = .white
+        cell.imageView.image = flickrPhoto.thumbnail
+        
         
         return cell
     }
