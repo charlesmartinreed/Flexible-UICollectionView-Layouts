@@ -10,6 +10,10 @@ import UIKit
 
 class PhotoCell: UICollectionViewCell {
     
+    //MARK:- IBOutlets
+    @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    
     //MARK:- Properties
     override var isSelected: Bool {
         didSet {
@@ -23,8 +27,5 @@ class PhotoCell: UICollectionViewCell {
         isSelected = false
     }
     
-    //MARK:- IBOutlets
-    @IBOutlet weak var imageView: UIImageView!
-    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
 }

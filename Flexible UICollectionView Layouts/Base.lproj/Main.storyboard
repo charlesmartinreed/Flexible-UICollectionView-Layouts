@@ -89,6 +89,11 @@
                                 <outlet property="delegate" destination="Pxr-fn-psI" id="llU-mX-ax0"/>
                             </connections>
                         </textField>
+                        <barButtonItem key="rightBarButtonItem" systemItem="action" id="Ubq-up-ZoI">
+                            <connections>
+                                <action selector="shareButtonTapped:" destination="Pxr-fn-psI" id="Aa6-qj-uhF"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                 </collectionViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="M2N-tb-Jwt" userLabel="First Responder" sceneMemberID="firstResponder"/>
