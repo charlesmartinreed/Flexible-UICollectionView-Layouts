@@ -27,7 +27,8 @@ final class PhotosViewController: UICollectionViewController {
             
             if let oldValue = oldValue {
                 indexPaths.append(oldValue)
-                collectionView.scrollToItem(at: oldValue, at: .centeredVertically, animated: true)
+                self.collectionView.reloadItems(at: indexPaths)
+                collectionView.scrollToItem(at: oldValue, at: .top, animated: true)
             }
             
             collectionView.performBatchUpdates({ //if this prop changes, update the colletionView
@@ -51,6 +52,25 @@ final class PhotosViewController: UICollectionViewController {
 private extension PhotosViewController {
     func photo(for indexPath: IndexPath) -> FlickrPhoto {
         return searches[indexPath.section].searchResults[indexPath.row]
+    }
+    
+    //method for downloading the large version of an image from Flickr and displaying it
+    func performLargeImageFetch(for indexPath: IndexPath, flickrPhoto: FlickrPhoto) {
+        guard let cell = collectionView.cellForItem(at: indexPath) as? PhotoCell else { return }
+        
+        cell.activityIndicator.startAnimating()
+        
+        flickrPhoto.loadLargeImage { [unowned self] result in
+        
+            switch result { //either we get back a photo or we are unable to obtain one
+            case .results(let photo):
+                if indexPath == self.largePhotoIndexPath { //if we've selected an imag
+                    cell.imageView.image = photo.largeImage
+                }
+            case .error(_):
+                return
+            }
+        }
     }
 }
 
@@ -93,6 +113,7 @@ extension PhotosViewController {
         }
         return false
     }
+    
 }
 
 //MARK:- UICollectionViewDataSource extension
@@ -106,13 +127,24 @@ extension PhotosViewController {
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifer, for: indexPath) as? PhotoCell else { fatalError("Could not create cell") }
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifer, for: indexPath) as? PhotoCell else { preconditionFailure("Invalid cell type") }
         
         //user our convenience method to find a photo, given an indexPath
         let flickrPhoto = photo(for: indexPath)
-        cell.backgroundColor = .white
-        cell.imageView.image = flickrPhoto.thumbnail
+        cell.activityIndicator.stopAnimating()
         
+        guard indexPath == largePhotoIndexPath else { //if these don't match, use the thumbnail
+            cell.imageView.image = flickrPhoto.thumbnail
+            return cell
+        }
+        
+        guard flickrPhoto.largeImage == nil else { //if large image is not nil, display the large image in the cell
+            cell.imageView.image = flickrPhoto.largeImage
+            return cell
+        }
+        
+        cell.imageView.image = flickrPhoto.thumbnail
+        performLargeImageFetch(for: indexPath, flickrPhoto: flickrPhoto)
         
         return cell
     }
