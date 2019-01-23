@@ -83,6 +83,20 @@ extension PhotosViewController {
         
         return cell
     }
+    
+    //MARK:- Supplemental view extension
+    override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        
+        switch kind {
+        case UICollectionView.elementKindSectionHeader:
+            guard let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "\(PhotoHeaderView.self)", for: indexPath) as? PhotoHeaderView else { fatalError("Invalid view type") }
+            let searchTerm = searches[indexPath.section].searchTerm
+            headerView.headerLabel.text = searchTerm.uppercased()
+            return headerView
+        default:
+            assert(false, "Invalid element type")
+        }
+    }
 }
 
 //MARK:- UICollectionViewFlowLayout delegate extension
@@ -107,3 +121,4 @@ extension PhotosViewController : UICollectionViewDelegateFlowLayout {
         return sectionInsets.left
     }
 }
+
